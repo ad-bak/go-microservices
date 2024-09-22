@@ -6,6 +6,8 @@ import (
 
 	"github.com/ad-bak/common"
 	pb "github.com/ad-bak/common/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type handler struct {
@@ -38,7 +40,14 @@ func (h *handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		Items:      items,
 	})
 
-	if err != nil {
+	rStatus := status.Convert(err)
+	if rStatus != nil {
+
+		if rStatus.Code() != codes.InvalidArgument {
+			common.WriteError(w, http.StatusInternalServerError, rStatus.Message())
+			return
+		}
+
 		common.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
